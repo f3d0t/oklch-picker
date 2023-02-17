@@ -3,6 +3,13 @@ import { showP3, showRec2020 } from '../../stores/settings'
 import { support } from '../../stores/support'
 import { paintCH, paintCL, paintLH } from './paint'
 
+interface SharedProps {
+  scale: number
+  hasP3: boolean
+  isShowP3: boolean
+  isShowRec2020: boolean
+}
+
 export type MessageData =
   | {
       type: 'init'
@@ -12,30 +19,18 @@ export type MessageData =
       p3Border: string
       rec2020Border: string
     }
-  | {
+  | ({
       type: 'l'
       l: number
-      scale: number
-      hasP3: boolean
-      isShowP3: boolean
-      isShowRec2020: boolean
-    }
-  | {
+    } & SharedProps)
+  | ({
       type: 'c'
       c: number
-      scale: number
-      hasP3: boolean
-      isShowP3: boolean
-      isShowRec2020: boolean
-    }
-  | {
+    } & SharedProps)
+  | ({
       type: 'h'
       h: number
-      scale: number
-      hasP3: boolean
-      isShowP3: boolean
-      isShowRec2020: boolean
-    }
+    } & SharedProps)
 
 let canvas: HTMLCanvasElement | undefined
 let p3Border: string
