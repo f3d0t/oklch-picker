@@ -133,3 +133,16 @@ export function trackPaint(
     reportQuick(type, ms)
   }
 }
+
+export function reportOffscreen(
+  type: RenderType,
+  isFull: boolean,
+  ms: number
+): void {
+  reportFreeze(ms)
+  if (isFull) {
+    reportFull(ms)
+  } else {
+    reportQuick(type, ms)
+  }
+}

@@ -47,7 +47,9 @@ function paint(
   height: number,
   hasGaps: boolean,
   block: number,
-  getColor: GetColor
+  getColor: GetColor,
+  p3Border?: string,
+  rec2020Border?: string
 ): void {
   let getPixel = generateGetPixel(
     getColor,
@@ -100,7 +102,8 @@ function paint(
   }
   ctx.putImageData(pixels, 0, 0)
 
-  let [p3, rec2020] = getBorders()
+  let [p3, rec2020] =
+    p3Border && rec2020Border ? [p3Border, rec2020Border] : getBorders()
   if (showP3.get() && showRec2020.get()) {
     paintSeparator(ctx, p3, getSeparator(Space.sRGB, Space.P3))
     paintSeparator(ctx, p3, getSeparator(Space.P3, Space.sRGB))
@@ -115,34 +118,66 @@ function paint(
   }
 }
 
-export function paintCL(canvas: HTMLCanvasElement, h: number, scale: number): void {
+export function paintCL(
+  canvas: HTMLCanvasElement,
+  h: number,
+  scale: number,
+  p3Border?: string,
+  rec2020Border?: string
+): void {
   let [width, height] = setScale(canvas, scale)
   let ctx = getCleanCtx(canvas)
 
   let lFactor = L_MAX / width
   let cFactor = (showRec2020.get() ? C_MAX_REC2020 : C_MAX) / height
 
-  paint(ctx, width, height, false, 6, (x, y) => {
-    return build(x * lFactor, y * cFactor, h)
-  })
+  paint(
+    ctx,
+    width,
+    height,
+    false,
+    6,
+    (x, y) => {
+      return build(x * lFactor, y * cFactor, h)
+    },
+    p3Border,
+    rec2020Border
+  )
 }
 
-export function paintCH(canvas: HTMLCanvasElement, l: number, scale: number): void {
+export function paintCH(
+  canvas: HTMLCanvasElement,
+  l: number,
+  scale: number,
+  p3Border?: string,
+  rec2020Border?: string
+): void {
   let [width, height] = setScale(canvas, scale)
   let ctx = getCleanCtx(canvas)
 
   let hFactor = H_MAX / width
   let cFactor = (showRec2020.get() ? C_MAX_REC2020 : C_MAX) / height
 
-  paint(ctx, width, height, false, 6, (x, y) => {
-    return build(l, y * cFactor, x * hFactor)
-  })
+  paint(
+    ctx,
+    width,
+    height,
+    false,
+    6,
+    (x, y) => {
+      return build(l, y * cFactor, x * hFactor)
+    },
+    p3Border,
+    rec2020Border
+  )
 }
 
 export function paintLH(
   canvas: HTMLCanvasElement,
   c: number,
-  scale: number
+  scale: number,
+  p3Border?: string,
+  rec2020Border?: string
 ): void {
   let [width, height] = setScale(canvas, scale)
   let ctx = getCleanCtx(canvas)
@@ -150,7 +185,16 @@ export function paintLH(
   let hFactor = H_MAX / width
   let lFactor = L_MAX / height
 
-  paint(ctx, width, height, true, 2, (x, y) => {
-    return build(y * lFactor, c, x * hFactor)
-  })
+  paint(
+    ctx,
+    width,
+    height,
+    true,
+    2,
+    (x, y) => {
+      return build(y * lFactor, c, x * hFactor)
+    },
+    p3Border,
+    rec2020Border
+  )
 }

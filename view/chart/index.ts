@@ -1,8 +1,17 @@
 import { setCurrentComponents, onPaint } from '../../stores/current.js'
-import { trackPaint, getQuickScale } from '../../stores/benchmark.js'
+import {
+  trackPaint,
+  getQuickScale,
+  RenderType,
+  reportOffscreen
+} from '../../stores/benchmark.js'
 import { paintCL, paintCH, paintLH } from './paint.js'
 import { showCharts, showRec2020 } from '../../stores/settings.js'
 import { initCanvasSize } from '../../lib/canvas.js'
+import { MessageData } from './worker.js'
+import PaintWorker from './worker.js?worker'
+import { support } from '../../stores/support.js'
+import { getBorders } from '../../lib/paint.js'
 
 const MAX_SCALE = 8
 
@@ -82,35 +91,108 @@ initEvents(canvasC)
 initEvents(canvasH)
 
 function initCharts(): void {
-  initCanvasSize(canvasL)
-  initCanvasSize(canvasC)
-  initCanvasSize(canvasH)
-  onPaint({
-    l(l, isFull) {
-      if (!showCharts.get()) return
-      let scale = getQuickScale('l', isFull)
-      if (scale > MAX_SCALE) return
-      trackPaint('l', isFull, () => {
-        paintCH(canvasL, (L_MAX * l) / 100, scale)
-      })
-    },
-    c(c, isFull) {
-      if (!showCharts.get()) return
-      let scale = getQuickScale('c', isFull)
-      if (scale > MAX_SCALE) return
-      trackPaint('c', isFull, () => {
-        paintLH(canvasC, c, scale)
-      })
-    },
-    h(h, isFull) {
-      if (!showCharts.get()) return
-      let scale = getQuickScale('h', isFull)
-      if (scale > MAX_SCALE) return
-      trackPaint('h', isFull, () => {
-        paintCL(canvasH, h, scale)
-      })
+  if (canvasL.transferControlToOffscreen) {
+    function send(worker: Worker, message: MessageData): void {
+      if (message.type === 'init') {
+        worker.postMessage(message, [message.canvas])
+      } else {
+        worker.postMessage(message)
+      }
     }
-  })
+
+    function init(type: string, canvas: HTMLCanvasElement): Worker {
+      let pixelRation = Math.ceil(window.devicePixelRatio)
+      let canvasSize = canvas.getBoundingClientRect()
+      let width = canvasSize.width * pixelRation
+      let height = canvasSize.height * pixelRation
+      let worker = new PaintWorker()
+      let [p3Border, rec2020Border] = getBorders()
+      send(worker, {
+        type: 'init',
+        canvas: canvas.transferControlToOffscreen!(),
+        width,
+        height,
+        p3Border,
+        rec2020Border
+      })
+      worker.onmessage = (
+        e: MessageEvent<{ type: RenderType; ms: number; isFull: boolean }>
+      ) => {
+        reportOffscreen(e.data.type, e.data.isFull, e.data.ms)
+      }
+      return worker
+    }
+
+    let workerL = init('l', canvasL)
+    let workerC = init('c', canvasC)
+    let workerH = init('h', canvasH)
+
+    onPaint({
+      l(l, isFull) {
+        if (!showCharts.get()) return
+        let scale = getQuickScale('l', isFull)
+        if (scale > MAX_SCALE) return
+        send(workerL, {
+          type: 'l',
+          l: (L_MAX * l) / 100,
+          scale,
+          hasP3: support.get().p3
+        })
+      },
+      c(c, isFull) {
+        if (!showCharts.get()) return
+        let scale = getQuickScale('c', isFull)
+        if (scale > MAX_SCALE) return
+        send(workerC, {
+          type: 'c',
+          c,
+          scale,
+          hasP3: support.get().p3
+        })
+      },
+      h(h, isFull) {
+        if (!showCharts.get()) return
+        let scale = getQuickScale('h', isFull)
+        if (scale > MAX_SCALE) return
+        send(workerH, {
+          type: 'h',
+          h,
+          scale,
+          hasP3: support.get().p3
+        })
+      }
+    })
+  } else {
+    initCanvasSize(canvasL)
+    initCanvasSize(canvasC)
+    initCanvasSize(canvasH)
+    onPaint({
+      l(l, isFull) {
+        if (!showCharts.get()) return
+        let scale = getQuickScale('l', isFull)
+        if (scale > MAX_SCALE) return
+        trackPaint('l', isFull, () => {
+          paintCH(canvasL, (L_MAX * l) / 100, scale)
+        })
+      },
+      c(c, isFull) {
+        if (!showCharts.get()) return
+        let scale = getQuickScale('c', isFull)
+        if (scale > MAX_SCALE) return
+        trackPaint('c', isFull, () => {
+          paintLH(canvasC, c, scale)
+        })
+      },
+      h(h, isFull) {
+        if (!showCharts.get()) return
+        let scale = getQuickScale('h', isFull)
+        if (scale > MAX_SCALE) return
+        trackPaint('h', isFull, () => {
+          paintCL(canvasH, h, scale)
+        })
+      }
+    })
+  }
 }
 
 if (showCharts.get()) {
