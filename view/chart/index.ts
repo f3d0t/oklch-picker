@@ -6,7 +6,7 @@ import {
   reportOffscreen
 } from '../../stores/benchmark.js'
 import { paintCL, paintCH, paintLH } from './paint.js'
-import { showCharts, showRec2020 } from '../../stores/settings.js'
+import { showCharts, showP3, showRec2020 } from '../../stores/settings.js'
 import { initCanvasSize } from '../../lib/canvas.js'
 import { MessageData } from './worker.js'
 import PaintWorker from './worker.js?worker'
@@ -136,7 +136,9 @@ function initCharts(): void {
           type: 'l',
           l: (L_MAX * l) / 100,
           scale,
-          hasP3: support.get().p3
+          hasP3: support.get().p3,
+          isShowP3: showP3.get(),
+          isShowRec2020: showRec2020.get()
         })
       },
       c(c, isFull) {
@@ -147,7 +149,9 @@ function initCharts(): void {
           type: 'c',
           c,
           scale,
-          hasP3: support.get().p3
+          hasP3: support.get().p3,
+          isShowP3: showP3.get(),
+          isShowRec2020: showRec2020.get()
         })
       },
       h(h, isFull) {
@@ -158,7 +162,9 @@ function initCharts(): void {
           type: 'h',
           h,
           scale,
-          hasP3: support.get().p3
+          hasP3: support.get().p3,
+          isShowP3: showP3.get(),
+          isShowRec2020: showRec2020.get()
         })
       }
     })

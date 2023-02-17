@@ -1,4 +1,5 @@
 import { initOffscreenCanvasSize } from '../../lib/canvas'
+import { showP3, showRec2020 } from '../../stores/settings'
 import { support } from '../../stores/support'
 import { paintCH, paintCL, paintLH } from './paint'
 
@@ -16,18 +17,24 @@ export type MessageData =
       l: number
       scale: number
       hasP3: boolean
+      isShowP3: boolean
+      isShowRec2020: boolean
     }
   | {
       type: 'c'
       c: number
       scale: number
       hasP3: boolean
+      isShowP3: boolean
+      isShowRec2020: boolean
     }
   | {
       type: 'h'
       h: number
       scale: number
       hasP3: boolean
+      isShowP3: boolean
+      isShowRec2020: boolean
     }
 
 let canvas: HTMLCanvasElement | undefined
@@ -43,6 +50,12 @@ onmessage = (e: MessageEvent<MessageData>) => {
   } else if (canvas) {
     if (e.data.hasP3 !== support.get().p3) {
       support.setKey('p3', e.data.hasP3)
+    }
+    if (e.data.isShowP3 !== showP3.get()) {
+      showP3.set(e.data.isShowP3)
+    }
+    if (e.data.isShowRec2020 !== showRec2020.get()) {
+      showRec2020.set(e.data.isShowRec2020)
     }
     let start = Date.now()
     if (e.data.type === 'l') {
