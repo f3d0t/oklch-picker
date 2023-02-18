@@ -8,10 +8,10 @@ import {
 import { paintCL, paintCH, paintLH } from './paint.js'
 import { showCharts, showP3, showRec2020 } from '../../stores/settings.js'
 import { initCanvasSize } from '../../lib/canvas.js'
-import { MessageData } from './worker.js'
-import PaintWorker from './worker.js?worker'
 import { support } from '../../stores/support.js'
 import { getBorders } from '../../lib/paint.js'
+import { MessageData } from './worker.js'
+import PaintWorker from './worker.js?worker'
 
 const MAX_SCALE = 8
 
@@ -100,7 +100,7 @@ function initCharts(): void {
       }
     }
 
-    function init(type: string, canvas: HTMLCanvasElement): Worker {
+    function init(type: RenderType, canvas: HTMLCanvasElement): Worker {
       let pixelRation = Math.ceil(window.devicePixelRatio)
       let canvasSize = canvas.getBoundingClientRect()
       let width = canvasSize.width * pixelRation
@@ -115,10 +115,8 @@ function initCharts(): void {
         p3Border,
         rec2020Border
       })
-      worker.onmessage = (
-        e: MessageEvent<{ type: RenderType; ms: number; isFull: boolean }>
-      ) => {
-        reportOffscreen(e.data.type, e.data.isFull, e.data.ms)
+      worker.onmessage = (e: MessageEvent<{ ms: number; isFull: boolean }>) => {
+        reportOffscreen(type, e.data.isFull, e.data.ms)
       }
       return worker
     }

@@ -61,7 +61,6 @@ onmessage = (e: MessageEvent<MessageData>) => {
       paintCL(canvas, e.data.h, e.data.scale, p3Border, rec2020Border)
     }
     postMessage({
-      type: e.data.type,
       ms: Date.now() - start,
       isFull: e.data.scale === 1
     })
