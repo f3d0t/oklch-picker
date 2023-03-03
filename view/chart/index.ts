@@ -126,7 +126,7 @@ function initCharts(): void {
       })
       worker.onmessage = (e: MessageEvent<{ ms: number; isFull: boolean }>) => {
         isWorkerBusy[type] = false
-        repaintQueue(type)
+        callRepaint(type)
         reportOffscreen(type, e.data.isFull, e.data.ms)
       }
       return worker
@@ -141,7 +141,7 @@ function initCharts(): void {
       h: workerH
     }
 
-    function repaintQueue(type: RenderType): void {
+    function callRepaint(type: RenderType): void {
       let isBusy = isWorkerBusy[type]
       let currentMessage = queue[type]
       if (!isBusy && currentMessage) {
@@ -167,6 +167,7 @@ function initCharts(): void {
           isShowP3: showP3.get(),
           isShowRec2020: showRec2020.get()
         }
+        callRepaint('l')
       },
       c(c, isFull) {
         if (!showCharts.get()) return
@@ -183,6 +184,7 @@ function initCharts(): void {
           isShowP3: showP3.get(),
           isShowRec2020: showRec2020.get()
         }
+        callRepaint('c')
       },
       h(h, isFull) {
         if (!showCharts.get()) return
@@ -199,6 +201,7 @@ function initCharts(): void {
           isShowP3: showP3.get(),
           isShowRec2020: showRec2020.get()
         }
+        callRepaint('h')
       }
     })
   } else {
