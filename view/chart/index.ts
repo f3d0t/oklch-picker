@@ -1,3 +1,5 @@
+import { atom, map } from 'nanostores'
+
 import { setCurrentComponents, onPaint } from '../../stores/current.js'
 import {
   trackPaint,
@@ -13,6 +15,8 @@ import { support } from '../../stores/support.js'
 import { getBorders } from '../../lib/paint.js'
 import { MessageData } from './worker.js'
 import PaintWorker from './worker.js?worker'
+
+type WorkerBusyType = Record<RenderType, boolean>
 
 const MAX_SCALE = 8
 
@@ -93,6 +97,17 @@ initEvents(canvasH)
 
 function initCharts(): void {
   if (canvasL.transferControlToOffscreen) {
+    let queue = map<{ [key in RenderType]: MessageData | undefined }>({
+      l: undefined,
+      c: undefined,
+      h: undefined
+    })
+    let isWorkerBusy = map<WorkerBusyType>({
+      l: false,
+      c: false,
+      h: false
+    })
+
     function send(worker: Worker, message: MessageData): void {
       if (message.type === 'init') {
         worker.postMessage(message, [message.canvas])
@@ -115,6 +130,7 @@ function initCharts(): void {
         rec2020Border
       })
       worker.onmessage = (e: MessageEvent<{ ms: number; isFull: boolean }>) => {
+        isWorkerBusy.setKey(type, false)
         reportOffscreen(type, e.data.isFull, e.data.ms)
       }
       return worker
@@ -123,6 +139,28 @@ function initCharts(): void {
     let workerL = init('l', canvasL)
     let workerC = init('c', canvasC)
     let workerH = init('h', canvasH)
+    let typeWorkerMap: { [key in RenderType]: Worker } = {
+      l: workerL,
+      c: workerC,
+      h: workerH
+    }
+
+    isWorkerBusy.listen((value, key) => {
+      if (!value[key]) queue.notify()
+    })
+
+    queue.listen(message => {
+      let isWorkerBusyValue = isWorkerBusy.get()
+      ;(Object.keys(typeWorkerMap) as RenderType[]).forEach(key => {
+        let isBusy = isWorkerBusyValue[key]
+        let currentMessage = message[key]
+        if (!isBusy && currentMessage) {
+          isWorkerBusy.setKey(key, true)
+          send(typeWorkerMap[key], currentMessage)
+          queue.setKey(key, undefined)
+        }
+      })
+    })
 
     onPaint({
       l(l, isFull) {
@@ -132,7 +170,7 @@ function initCharts(): void {
           reportQuick('l', 1)
           return
         }
-        send(workerL, {
+        queue.setKey('l', {
           type: 'l',
           l: (L_MAX * l) / 100,
           scale,
@@ -148,7 +186,7 @@ function initCharts(): void {
           reportQuick('c', 1)
           return
         }
-        send(workerC, {
+        queue.setKey('c', {
           type: 'c',
           c,
           scale,
@@ -164,7 +202,7 @@ function initCharts(): void {
           reportQuick('h', 1)
           return
         }
-        send(workerH, {
+        queue.setKey('h', {
           type: 'h',
           h,
           scale,
