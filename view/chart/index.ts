@@ -102,16 +102,14 @@ function initCharts(): void {
 
     function init(type: RenderType, canvas: HTMLCanvasElement): Worker {
       let pixelRation = Math.ceil(window.devicePixelRatio)
-      let canvasSize = canvas.getBoundingClientRect()
-      let width = canvasSize.width * pixelRation
-      let height = canvasSize.height * pixelRation
+      let canvasRect = canvas.getBoundingClientRect()
       let worker = new PaintWorker()
       let [p3Border, rec2020Border] = getBorders()
       send(worker, {
         type: 'init',
         canvas: canvas.transferControlToOffscreen!(),
-        width,
-        height,
+        canvasRect,
+        pixelRation,
         p3Border,
         rec2020Border
       })

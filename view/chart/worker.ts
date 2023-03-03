@@ -1,4 +1,4 @@
-import { initOffscreenCanvasSize } from '../../lib/canvas'
+import { initCanvasSize } from '../../lib/canvas'
 import { showP3, showRec2020 } from '../../stores/settings'
 import { support } from '../../stores/support'
 import { paintCH, paintCL, paintLH } from './paint'
@@ -14,8 +14,8 @@ export type MessageData =
   | {
       type: 'init'
       canvas: HTMLCanvasElement
-      width: number
-      height: number
+      canvasRect: DOMRect
+      pixelRation: number
       p3Border: string
       rec2020Border: string
     }
@@ -39,7 +39,7 @@ let rec2020Border: string
 onmessage = (e: MessageEvent<MessageData>) => {
   if (e.data.type === 'init') {
     canvas = e.data.canvas
-    initOffscreenCanvasSize(canvas, e.data.width, e.data.height)
+    initCanvasSize(canvas, e.data.pixelRation, e.data.canvasRect)
     p3Border = e.data.p3Border
     rec2020Border = e.data.rec2020Border
   } else if (canvas) {

@@ -14,26 +14,15 @@ let originSize = new Map<HTMLCanvasElement, [number, number]>()
 
 export function initCanvasSize(
   canvas: HTMLCanvasElement,
+  pixelRation: number = Math.ceil(window.devicePixelRatio),
+  canvasSize: DOMRect = canvas.getBoundingClientRect(),
   sizeMap: Map<HTMLCanvasElement, [number, number]> = originSize
 ): [number, number] {
-  let pixelRation = Math.ceil(window.devicePixelRatio)
-  let canvasSize = canvas.getBoundingClientRect()
   let width = canvasSize.width * pixelRation
   let height = canvasSize.height * pixelRation
   canvas.width = width
   canvas.height = height
   sizeMap.set(canvas, [width, height])
-  return [width, height]
-}
-
-export function initOffscreenCanvasSize(
-  canvas: HTMLCanvasElement,
-  width: number,
-  height: number
-): [number, number] {
-  canvas.width = width
-  canvas.height = height
-  originSize.set(canvas, [width, height])
   return [width, height]
 }
 
