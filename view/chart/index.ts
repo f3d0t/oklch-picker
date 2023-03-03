@@ -1,4 +1,4 @@
-import { atom, map } from 'nanostores'
+import { map } from 'nanostores'
 
 import { setCurrentComponents, onPaint } from '../../stores/current.js'
 import {
@@ -6,7 +6,8 @@ import {
   getQuickScale,
   RenderType,
   reportOffscreen,
-  reportQuick
+  reportQuick,
+  MAX_SCALE
 } from '../../stores/benchmark.js'
 import { paintCL, paintCH, paintLH } from './paint.js'
 import { showCharts, showP3, showRec2020 } from '../../stores/settings.js'
@@ -17,8 +18,6 @@ import { MessageData } from './worker.js'
 import PaintWorker from './worker.js?worker'
 
 type WorkerBusyType = Record<RenderType, boolean>
-
-const MAX_SCALE = 8
 
 let chartL = document.querySelector<HTMLDivElement>('.chart.is-l')!
 let chartC = document.querySelector<HTMLDivElement>('.chart.is-c')!

@@ -2,7 +2,7 @@ import { Oklch, formatHex } from 'culori/fn'
 import { atom, map } from 'nanostores'
 
 export type RenderType = 'l' | 'c' | 'h'
-
+export const MAX_SCALE = 8
 export let benchmarking = atom(false)
 
 if (/^\?bench(=|&|$)/.test(location.search)) {
@@ -95,6 +95,8 @@ export function getQuickScale(type: RenderType, isFull: boolean): number {
 
   let time = quick[type].total / quick[type].count
   let scale = Math.ceil((quick[type].prevScale * time) / DESIRE_RENDER_TIME)
+  scale = scale > MAX_SCALE ? MAX_SCALE : scale
+
   quick[type].prevScale = scale
   return scale
 }
