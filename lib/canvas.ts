@@ -1,22 +1,33 @@
 import { support } from '../stores/support.js'
 
 export function getCleanCtx(
-  canvas: HTMLCanvasElement
-): CanvasRenderingContext2D {
+  canvas: HTMLCanvasElement | OffscreenCanvas
+): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
   let ctx = canvas.getContext('2d', {
     colorSpace: support.get().p3 ? 'display-p3' : 'srgb'
   })!
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  return ctx
+  ;(ctx as CanvasRenderingContext2D).clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  )
+  return <CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D>ctx
 }
 
-let originSize = new Map<HTMLCanvasElement, [number, number]>()
+let originSize = new Map<
+  HTMLCanvasElement | OffscreenCanvas,
+  [number, number]
+>()
 
 export function initCanvasSize(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   pixelRation: number = Math.ceil(window.devicePixelRatio),
-  canvasSize: DOMRect = canvas.getBoundingClientRect(),
-  sizeMap: Map<HTMLCanvasElement, [number, number]> = originSize
+  canvasSize: DOMRect = (canvas as HTMLCanvasElement).getBoundingClientRect(),
+  sizeMap: Map<
+    HTMLCanvasElement | OffscreenCanvas,
+    [number, number]
+  > = originSize
 ): [number, number] {
   let width = canvasSize.width * pixelRation
   let height = canvasSize.height * pixelRation
@@ -27,7 +38,7 @@ export function initCanvasSize(
 }
 
 export function setScale(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   scale: number
 ): [number, number] {
   let [originWidth, originalHeight] = originSize.get(canvas)!

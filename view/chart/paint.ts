@@ -15,7 +15,7 @@ import { showRec2020, showP3 } from '../../stores/settings.js'
 import { support } from '../../stores/support.js'
 
 function paintSeparator(
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   color: string,
   line: [number, number][] | undefined
 ): void {
@@ -42,7 +42,7 @@ function paintSeparator(
 }
 
 function paint(
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   width: number,
   height: number,
   hasGaps: boolean,
@@ -119,7 +119,7 @@ function paint(
 }
 
 export function paintCL(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   h: number,
   scale: number,
   p3Border?: string,
@@ -146,7 +146,7 @@ export function paintCL(
 }
 
 export function paintCH(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   l: number,
   scale: number,
   p3Border?: string,
@@ -173,7 +173,7 @@ export function paintCH(
 }
 
 export function paintLH(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   c: number,
   scale: number,
   p3Border?: string,

@@ -13,7 +13,7 @@ interface SharedProps {
 export type MessageData =
   | {
       type: 'init'
-      canvas: HTMLCanvasElement
+      canvas: OffscreenCanvas
       canvasRect: DOMRect
       pixelRation: number
       p3Border: string
@@ -32,7 +32,7 @@ export type MessageData =
       h: number
     } & SharedProps)
 
-let canvas: HTMLCanvasElement | undefined
+let canvas: OffscreenCanvas | undefined
 let p3Border: string
 let rec2020Border: string
 

@@ -1,3 +1,5 @@
+import type { MessageData } from './worker.js'
+
 import { setCurrentComponents, onPaint } from '../../stores/current.js'
 import {
   trackPaint,
@@ -12,7 +14,6 @@ import { showCharts, showP3, showRec2020 } from '../../stores/settings.js'
 import { initCanvasSize } from '../../lib/canvas.js'
 import { support } from '../../stores/support.js'
 import { getBorders } from '../../lib/paint.js'
-import { MessageData } from './worker.js'
 import PaintWorker from './worker.js?worker'
 
 let chartL = document.querySelector<HTMLDivElement>('.chart.is-l')!
