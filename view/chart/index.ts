@@ -1,5 +1,3 @@
-import { map } from 'nanostores'
-
 import { setCurrentComponents, onPaint } from '../../stores/current.js'
 import {
   trackPaint,
@@ -16,8 +14,6 @@ import { support } from '../../stores/support.js'
 import { getBorders } from '../../lib/paint.js'
 import { MessageData } from './worker.js'
 import PaintWorker from './worker.js?worker'
-
-type WorkerBusyType = Record<RenderType, boolean>
 
 let chartL = document.querySelector<HTMLDivElement>('.chart.is-l')!
 let chartC = document.querySelector<HTMLDivElement>('.chart.is-c')!
@@ -96,16 +92,16 @@ initEvents(canvasH)
 
 function initCharts(): void {
   if (canvasL.transferControlToOffscreen) {
-    let queue = map<{ [key in RenderType]: MessageData | undefined }>({
+    let queue: { [key in RenderType]: MessageData | undefined } = {
       l: undefined,
       c: undefined,
       h: undefined
-    })
-    let isWorkerBusy = map<WorkerBusyType>({
+    }
+    let isWorkerBusy: { [key in RenderType]: boolean } = {
       l: false,
       c: false,
       h: false
-    })
+    }
 
     function send(worker: Worker, message: MessageData): void {
       if (message.type === 'init') {
@@ -129,7 +125,8 @@ function initCharts(): void {
         rec2020Border
       })
       worker.onmessage = (e: MessageEvent<{ ms: number; isFull: boolean }>) => {
-        isWorkerBusy.setKey(type, false)
+        isWorkerBusy[type] = false
+        repaintQueue(type)
         reportOffscreen(type, e.data.isFull, e.data.ms)
       }
       return worker
@@ -144,22 +141,15 @@ function initCharts(): void {
       h: workerH
     }
 
-    isWorkerBusy.listen((value, key) => {
-      if (!value[key]) queue.notify()
-    })
-
-    queue.listen(message => {
-      let isWorkerBusyValue = isWorkerBusy.get()
-      ;(Object.keys(typeWorkerMap) as RenderType[]).forEach(key => {
-        let isBusy = isWorkerBusyValue[key]
-        let currentMessage = message[key]
-        if (!isBusy && currentMessage) {
-          isWorkerBusy.setKey(key, true)
-          send(typeWorkerMap[key], currentMessage)
-          queue.setKey(key, undefined)
-        }
-      })
-    })
+    function repaintQueue(type: RenderType): void {
+      let isBusy = isWorkerBusy[type]
+      let currentMessage = queue[type]
+      if (!isBusy && currentMessage) {
+        isWorkerBusy[type] = true
+        send(typeWorkerMap[type], currentMessage)
+        queue[type] = undefined
+      }
+    }
 
     onPaint({
       l(l, isFull) {
@@ -169,14 +159,14 @@ function initCharts(): void {
           reportQuick('l', 1)
           return
         }
-        queue.setKey('l', {
+        queue.l = {
           type: 'l',
           l: (L_MAX * l) / 100,
           scale,
           hasP3: support.get().p3,
           isShowP3: showP3.get(),
           isShowRec2020: showRec2020.get()
-        })
+        }
       },
       c(c, isFull) {
         if (!showCharts.get()) return
@@ -185,14 +175,14 @@ function initCharts(): void {
           reportQuick('c', 1)
           return
         }
-        queue.setKey('c', {
+        queue.c = {
           type: 'c',
           c,
           scale,
           hasP3: support.get().p3,
           isShowP3: showP3.get(),
           isShowRec2020: showRec2020.get()
-        })
+        }
       },
       h(h, isFull) {
         if (!showCharts.get()) return
@@ -201,14 +191,14 @@ function initCharts(): void {
           reportQuick('h', 1)
           return
         }
-        queue.setKey('h', {
+        queue.h = {
           type: 'h',
           h,
           scale,
           hasP3: support.get().p3,
           isShowP3: showP3.get(),
           isShowRec2020: showRec2020.get()
-        })
+        }
       }
     })
   } else {
